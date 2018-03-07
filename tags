@@ -9,10 +9,12 @@ HTTPWatcher	watchers.py	/^class HTTPWatcher(Watcher):$/;"	c
 LogAlerter	alerters.py	/^class LogAlerter(Alerter):$/;"	c
 MQTTWatcher	watchers.py	/^class MQTTWatcher(Watcher):$/;"	c
 Reminder	reminder.py	/^class Reminder(object):$/;"	c
+ReminderDaemon	reminder.py	/^class ReminderDaemon(object):$/;"	c
 Watcher	watchers.py	/^class Watcher(object):$/;"	c
 __init__	alerters.py	/^    def __init__(self, *args, **kwargs):$/;"	m	class:LogAlerter
 __init__	alerters.py	/^    def __init__(self, message):$/;"	m	class:Alerter
-__init__	reminder.py	/^    def __init__(self, condition, daemon=None, watcher_config=None, alerter_config=None):$/;"	m	class:Reminder
+__init__	reminder.py	/^    def __init__(self, blocking=True, timezone='UTC', config_path='.', *args, **kwargs):$/;"	m	class:ReminderDaemon
+__init__	reminder.py	/^    def __init__(self, condition, daemon=None, watcher=None, alerter=None):$/;"	m	class:Reminder
 __init__	watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
 __init__	watchers.py	/^    def __init__(self, request_kwargs, key, *args, **kwargs):$/;"	m	class:HTTPWatcher
@@ -25,9 +27,15 @@ check	reminder.py	/^    def check(self):$/;"	m	class:Reminder
 deactivate	reminder.py	/^    def deactivate(self):$/;"	m	class:Reminder
 install_requires	setup.py	/^      install_requires=[$/;"	v
 listener_callback	watchers.py	/^    def listener_callback(client, userdata, msg):$/;"	m	class:MQTTWatcher
+on_created	reminder.py	/^    def on_created(self, event):$/;"	m	class:ReminderDaemon
+on_deleted	reminder.py	/^    def on_deleted(self, event):$/;"	m	class:ReminderDaemon
 py_modules	setup.py	/^      py_modules=['reminders'],$/;"	v
+remove_reminder	reminder.py	/^    def remove_reminder(self, reminder):$/;"	m	class:ReminderDaemon
+start	reminder.py	/^    def start(self):$/;"	m	class:ReminderDaemon
 test_condition	reminder.py	/^    def test_condition(self):$/;"	m	class:Reminder
+update	reminder.py	/^    def update(self, reminder):$/;"	m	class:ReminderDaemon
 update	watchers.py	/^    def update(self):$/;"	m	class:HTTPWatcher
 update	watchers.py	/^    def update(self):$/;"	m	class:MQTTWatcher
 update	watchers.py	/^    def update(self):$/;"	m	class:Watcher
 version	setup.py	/^      version='0.1',$/;"	v
+watcher_type_map	reminder.py	/^    watcher_type_map = {'http': HTTPWatcher, 'mqtt': MQTTWatcher}$/;"	v	class:Reminder
