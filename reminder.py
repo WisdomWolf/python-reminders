@@ -1,6 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_PAUSED, STATE_RUNNING
-import logging
+
 
 class Reminder(object):
 
