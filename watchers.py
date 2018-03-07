@@ -27,3 +27,24 @@ class HTTPWatcher(Watcher):
             self._logger.error('Unable to decode JSON from {}'.format(response))
             result = None
         return result
+        
+        
+class MQTTWatcher(Watcher):
+
+    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.topic_kwargs = topic_kwargs
+        self._client = paho.Client()
+        self.status = None
+        for topic in topic_kwargs:
+            self._client.message_add_callback(topic, listener_callback)
+        
+    def listener_callback(client, userdata, msg):
+        # This will be called by configured topics
+        try:
+            self.status = msg.payload if isinstance(msg.payload, str) else msg.payload.decode('utf8')
+        except UnicodeDecodeError:
+            self.status = 'ERR'
+            
+    def update(self):
+        return self.status
