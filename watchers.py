@@ -1,11 +1,13 @@
 import logging
 from json import JSONDecodeError
+import requests
 
 
 class Watcher(object):
 
-    def __init__(self, schedules, *args, **kwargs):
+    def __init__(self, reminder, schedules, *args, **kwargs):
         self._logger = logging.getLogger(__name__)
+        self.reminder = reminder
         self.schedules = schedules
 
     def update(self):
@@ -14,7 +16,7 @@ class Watcher(object):
 
 class HTTPWatcher(Watcher):
 
-    def __init__(self, request_kwargs, key, *args, **kwargs)
+    def __init__(self, request_kwargs, key, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.request_kwargs = request_kwargs
         self.key = key

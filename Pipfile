@@ -14,6 +14,9 @@ name = "pypi"
 apscheduler = "*"
 watchdog = "*"
 pyyaml = "*"
+dateutils = "*"
+pendulum = "*"
+dateparser = "*"
 
 
 [requires]

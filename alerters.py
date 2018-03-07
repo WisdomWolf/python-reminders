@@ -12,7 +12,7 @@ class Alerter(object):
 class LogAlerter(Alerter):
     
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs):
+        super().__init__(*args, **kwargs)
         
     def alert(self):
         self.logger.warn(self.message)
