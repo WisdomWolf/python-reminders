@@ -4,4 +4,4 @@ stages:
 Git MIRROR:
   stage: deploy
   script:
-      - git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME.git refs/remotes/origin/*:refs/heads/*
+      - git push --force --prune https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME.git refs/remotes/origin/*:refs/heads/*
