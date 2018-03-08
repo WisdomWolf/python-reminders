@@ -4,4 +4,4 @@ stages:
 Git MIRROR:
   stage: deploy
   script:
-    - git push --all https://$GITHUB_USER:$GITHUB_PASS@github.com/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME.git
+    - git push --all https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME.git
