@@ -118,7 +118,7 @@ class ReminderDaemon(object):
     def on_created(self, event):
         self.logger.debug('creation event received for {}'.format(event.src_path))
         if not event.is_directory:
-            path = event.src_path.strip(self.config_path).strip('/')
+            path = os.path.basename(event.src_path)
             self.load_yaml(path)
         else:
             self.logger.debug('skipping event because it is directory')
