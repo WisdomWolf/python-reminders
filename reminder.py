@@ -10,7 +10,6 @@ import yaml
 from watchers import HTTPWatcher, MQTTWatcher
 from alerters import LogAlerter
 import os
-import argparse
 
 class Reminder(object):
 
