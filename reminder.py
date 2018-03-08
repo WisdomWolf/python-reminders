@@ -1,33 +1,42 @@
 import re
 import pendulum
 import logging
+import logging.config
 from dateparser import parse as dateparse
 from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import yaml
 from watchers import HTTPWatcher, MQTTWatcher
+from alerters import LogAlerter
 import os
+import argparse
 
 class Reminder(object):
 
     watcher_type_map = {'http': HTTPWatcher, 'mqtt': MQTTWatcher}
+    alerter_type_map = {'log': LogAlerter}
 
     def __init__(self, condition, daemon=None, watcher=None, alerter=None):
         self._logger = logging.getLogger(__name__)
         self._daemon = daemon
+        self._logger.setLevel(self._daemon.logger.level)
         self.jobs = []
         self.job_ids = []
         if watcher:
+            self._logger.debug('creating watcher from: %s', watcher)
             watcher['reminder'] = self
             self.watcher = self.watcher_type_map.get(watcher.get('type'))(**watcher)
             jobs = self.watcher.schedules
             for job in jobs:
                 job['func'] = self.check
+                self._logger.debug('added job to jobs: %s', job)
                 self.jobs.append(job)
         if alerter:
-            # Will need logic similar to above
-            self.alerter = alerter
+            self._logger.debug('creating alerter from: %s', alerter)
+            alerter['reminder'] = self
+            # self.alerter = self.alerter_type_map.get(alerter.get('type'))(**alerter) or LogAlerter(**alerter)
+            self.alerter = LogAlerter(**alerter)
         self.condition = condition
 
     def test_condition(self):
@@ -42,7 +51,10 @@ class Reminder(object):
 
     def check(self):
         if self.test_condition() and self.alerter:
+            self._logger.debug('sending alert')
             self.alerter.alert()
+        else:
+            self._logger.debug('checked successfully - no alert necessary')
 
     def activate(self):
         raise NotImplementedError("activate() hasn't been implemented yet")
@@ -53,13 +65,16 @@ class Reminder(object):
 
 class ReminderDaemon(object):
 
-    def __init__(self, blocking=True, timezone='UTC', config_path='.', *args, **kwargs):
+    def __init__(self, blocking=True, timezone='UTC', config_path='.', logger_level=None, *args, **kwargs):
+        self.logger = logging.getLogger(__name__)
+        if logger_level:
+            self.logger.setLevel(logger_level)
+        self.logger.debug('initializing daemon')
         self.scheduler = BlockingScheduler(timezone=timezone) if blocking else BackgroundScheduler(timezone=timezone)
         self.reminders = []
         self.timezone = timezone
         self._observer = Observer()
         self.config_path = config_path
-        self.logger = logging.getLogger(__name__)
         for _, _, files in os.walk(self.config_path):
             for file_ in files:
                filename, extension = os.path.splitext(file_)
@@ -69,7 +84,7 @@ class ReminderDaemon(object):
         self._watchdog_handler.on_created = self.on_created
         self._watchdog_handler.on_modified = self.on_created
         self._watchdog_handler.on_deleted = self.on_deleted
-        self._observer.schedule(self._watchdog_handler, self.config_path, recursive=True)
+        self._observer.schedule(self._watchdog_handler, self.config_path)
         self.configs = {}
 
     def start(self):
@@ -84,8 +99,12 @@ class ReminderDaemon(object):
     def update(self, reminder):
         if reminder not in self.reminders:
             for job in reminder.jobs:
-                job_id = self.scheduler.add_job(**job)
-                reminder.job_ids.append(job_id)
+                self.logger.debug('adding job to scheduler: %s', job)
+                try:
+                    job_id = self.scheduler.add_job(**job)
+                    reminder.job_ids.append(job_id)
+                except TypeError:
+                    logger.error('Unable to add job to scheduler', exc_info=True)
             self.reminders.append(reminder)
         else:
             self.remove_reminder(reminder)
@@ -105,9 +124,12 @@ class ReminderDaemon(object):
             self.logger.debug('skipping event because it is directory')
 
     def load_yaml(self, path):
+        self.logger.debug('loading yaml config from %s', path)
+        path = os.path.join(self.config_path, path)
         with open(path) as f:
             config = yaml.safe_load(f.read())
             reminder_config = config.get('reminder')
+            self.logger.debug('loaded reminder_config: %s', reminder_config)
             if reminder_config:
                 self.add_reminder(reminder_config)
                 self.logger.info('loaded reminder config from %s', path)
@@ -116,11 +138,3 @@ class ReminderDaemon(object):
     def on_deleted(self, event):
         if event.src_path in self.configs:
             del self.configs[event.src_path]
-
-
-def main():
-    reminder_daemon = ReminderDaemon(timezone='US/Eastern', config_path='./config')
-    reminder_daemon.start()
-
-if __name__ == '__main__':
-    main()

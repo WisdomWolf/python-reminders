@@ -2,7 +2,7 @@ import logging
 
 class Alerter(object):
     
-    def __init__(self, message):
+    def __init__(self, reminder, message, notifiers=None, repeat_args=None, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.message = message
         

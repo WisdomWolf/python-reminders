@@ -12,8 +12,8 @@ Reminder	reminder.py	/^class Reminder(object):$/;"	c
 ReminderDaemon	reminder.py	/^class ReminderDaemon(object):$/;"	c
 Watcher	watchers.py	/^class Watcher(object):$/;"	c
 __init__	alerters.py	/^    def __init__(self, *args, **kwargs):$/;"	m	class:LogAlerter
-__init__	alerters.py	/^    def __init__(self, message):$/;"	m	class:Alerter
-__init__	reminder.py	/^    def __init__(self, blocking=True, timezone='UTC', config_path='.', *args, **kwargs):$/;"	m	class:ReminderDaemon
+__init__	alerters.py	/^    def __init__(self, reminder, message, notifiers=None, repeat_args=None, *args, **kwargs):$/;"	m	class:Alerter
+__init__	reminder.py	/^    def __init__(self, blocking=True, timezone='UTC', config_path='.', logger_level=None, *args, **kwargs):$/;"	m	class:ReminderDaemon
 __init__	reminder.py	/^    def __init__(self, condition, daemon=None, watcher=None, alerter=None):$/;"	m	class:Reminder
 __init__	watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
@@ -22,6 +22,7 @@ activate	reminder.py	/^    def activate(self):$/;"	m	class:Reminder
 add_reminder	reminder.py	/^    def add_reminder(self, reminder_config):$/;"	m	class:ReminderDaemon
 alert	alerters.py	/^    def alert(self):$/;"	m	class:Alerter
 alert	alerters.py	/^    def alert(self):$/;"	m	class:LogAlerter
+alerter_type_map	reminder.py	/^    alerter_type_map = {'log': LogAlerter}$/;"	v	class:Reminder
 author	setup.py	/^      author='@wisdomwolf',$/;"	v
 author_email	setup.py	/^      author_email='wisdomwolf@gmail.com',$/;"	v
 check	reminder.py	/^    def check(self):$/;"	m	class:Reminder
