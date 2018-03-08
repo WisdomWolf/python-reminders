@@ -72,6 +72,7 @@ class ReminderDaemon(object):
         self.logger.debug('initializing daemon')
         self.scheduler = BlockingScheduler(timezone=timezone) if blocking else BackgroundScheduler(timezone=timezone)
         self.reminders = []
+        self.configs = {}
         self.timezone = timezone
         self._observer = Observer()
         self.config_path = config_path
@@ -85,11 +86,10 @@ class ReminderDaemon(object):
         self._watchdog_handler.on_modified = self.on_created
         self._watchdog_handler.on_deleted = self.on_deleted
         self._observer.schedule(self._watchdog_handler, self.config_path)
-        self.configs = {}
 
     def start(self):
-        self.scheduler.start()
         self._observer.start()
+        self.scheduler.start()
 
     def add_reminder(self, reminder_config):
         reminder_config['daemon'] = self
@@ -113,7 +113,7 @@ class ReminderDaemon(object):
     def remove_reminder(self, reminder):
         for job_id in reminder.job_ids:
             self.scheduler.remove_job(job_id.id)
-            self.reminders.remove(reminder)
+        self.reminders.remove(reminder)
 
     def on_created(self, event):
         self.logger.debug('creation event received for {}'.format(event.src_path))
@@ -133,8 +133,15 @@ class ReminderDaemon(object):
             if reminder_config:
                 self.add_reminder(reminder_config)
                 self.logger.info('loaded reminder config from %s', path)
+                self.configs[os.path.basename(path)] = self.reminders[-1]
         # self.configs[path] = config
 
     def on_deleted(self, event):
-        if event.src_path in self.configs:
-            del self.configs[event.src_path]
+        self.logger.debug('deletion event for %s', event.src_path)
+        path = os.path.basename(event.src_path)
+        if path in self.configs:
+            self.remove_reminder(self.configs[path])
+            del self.configs[path]
+            self.logger.info('removed config for %s', path)
+        else:
+            self.logger.debug('No action taken for deletion event because it doesn\'t appear to exist in configs: %s', self.configs)

@@ -26,20 +26,25 @@ alerter_type_map	reminder.py	/^    alerter_type_map = {'log': LogAlerter}$/;"	v	
 author	setup.py	/^      author='@wisdomwolf',$/;"	v
 author_email	setup.py	/^      author_email='wisdomwolf@gmail.com',$/;"	v
 check	reminder.py	/^    def check(self):$/;"	m	class:Reminder
+config	main.py	/^            config = yaml.safe_load(f.read())$/;"	v
 deactivate	reminder.py	/^    def deactivate(self):$/;"	m	class:Reminder
 install_requires	setup.py	/^      install_requires=[$/;"	v
 listener_callback	watchers.py	/^    def listener_callback(client, userdata, msg):$/;"	m	class:MQTTWatcher
 load_yaml	reminder.py	/^    def load_yaml(self, path):$/;"	m	class:ReminderDaemon
-main	reminder.py	/^def main():$/;"	f
+main	main.py	/^def main():$/;"	f
 on_created	reminder.py	/^    def on_created(self, event):$/;"	m	class:ReminderDaemon
 on_deleted	reminder.py	/^    def on_deleted(self, event):$/;"	m	class:ReminderDaemon
+path	main.py	/^        path = value$/;"	v
+path	main.py	/^    path = default_path$/;"	v
 py_modules	setup.py	/^      py_modules=['reminders'],$/;"	v
 remove_reminder	reminder.py	/^    def remove_reminder(self, reminder):$/;"	m	class:ReminderDaemon
+setup_logging	main.py	/^def setup_logging($/;"	f
 start	reminder.py	/^    def start(self):$/;"	m	class:ReminderDaemon
 test_condition	reminder.py	/^    def test_condition(self):$/;"	m	class:Reminder
 update	reminder.py	/^    def update(self, reminder):$/;"	m	class:ReminderDaemon
 update	watchers.py	/^    def update(self):$/;"	m	class:HTTPWatcher
 update	watchers.py	/^    def update(self):$/;"	m	class:MQTTWatcher
 update	watchers.py	/^    def update(self):$/;"	m	class:Watcher
+value	main.py	/^    value = os.getenv(env_key, None)$/;"	v
 version	setup.py	/^      version='0.1',$/;"	v
 watcher_type_map	reminder.py	/^    watcher_type_map = {'http': HTTPWatcher, 'mqtt': MQTTWatcher}$/;"	v	class:Reminder
