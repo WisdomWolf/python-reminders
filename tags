@@ -19,6 +19,7 @@ __init__	watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, to
 __init__	watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
 __init__	watchers.py	/^    def __init__(self, request_kwargs, key, *args, **kwargs):$/;"	m	class:HTTPWatcher
 activate	reminder.py	/^    def activate(self):$/;"	m	class:Reminder
+add_reminder	reminder.py	/^    def add_reminder(self, reminder_config):$/;"	m	class:ReminderDaemon
 alert	alerters.py	/^    def alert(self):$/;"	m	class:Alerter
 alert	alerters.py	/^    def alert(self):$/;"	m	class:LogAlerter
 author	setup.py	/^      author='@wisdomwolf',$/;"	v
@@ -27,6 +28,8 @@ check	reminder.py	/^    def check(self):$/;"	m	class:Reminder
 deactivate	reminder.py	/^    def deactivate(self):$/;"	m	class:Reminder
 install_requires	setup.py	/^      install_requires=[$/;"	v
 listener_callback	watchers.py	/^    def listener_callback(client, userdata, msg):$/;"	m	class:MQTTWatcher
+load_yaml	reminder.py	/^    def load_yaml(self, path):$/;"	m	class:ReminderDaemon
+main	reminder.py	/^def main():$/;"	f
 on_created	reminder.py	/^    def on_created(self, event):$/;"	m	class:ReminderDaemon
 on_deleted	reminder.py	/^    def on_deleted(self, event):$/;"	m	class:ReminderDaemon
 py_modules	setup.py	/^      py_modules=['reminders'],$/;"	v

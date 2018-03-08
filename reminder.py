@@ -7,6 +7,7 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import yaml
 from watchers import HTTPWatcher, MQTTWatcher
+import os
 
 class Reminder(object):
 
@@ -16,6 +17,7 @@ class Reminder(object):
         self._logger = logging.getLogger(__name__)
         self._daemon = daemon
         self.jobs = []
+        self.job_ids = []
         if watcher:
             watcher['reminder'] = self
             self.watcher = self.watcher_type_map.get(watcher.get('type'))(**watcher)
@@ -58,6 +60,11 @@ class ReminderDaemon(object):
         self._observer = Observer()
         self.config_path = config_path
         self.logger = logging.getLogger(__name__)
+        for _, _, files in os.walk(self.config_path):
+            for file_ in files:
+               filename, extension = os.path.splitext(file_)
+               if extension in ['.yaml', '.yml']:
+                   self.load_yaml(file_)
         self._watchdog_handler = PatternMatchingEventHandler('*.yaml;*.yml')
         self._watchdog_handler.on_created = self.on_created
         self._watchdog_handler.on_modified = self.on_created
@@ -68,6 +75,11 @@ class ReminderDaemon(object):
     def start(self):
         self.scheduler.start()
         self._observer.start()
+
+    def add_reminder(self, reminder_config):
+        reminder_config['daemon'] = self
+        reminder = Reminder(**reminder_config)
+        self.update(reminder)
 
     def update(self, reminder):
         if reminder not in self.reminders:
@@ -88,12 +100,27 @@ class ReminderDaemon(object):
         self.logger.debug('creation event received for {}'.format(event.src_path))
         if not event.is_directory:
             path = event.src_path.strip(self.config_path).strip('/')
-            with open(event.src_path) as f:
-                config = yaml.safe_load(f.read())
-            self.configs[path] = config
+            self.load_yaml(path)
         else:
             self.logger.debug('skipping event because it is directory')
+
+    def load_yaml(self, path):
+        with open(path) as f:
+            config = yaml.safe_load(f.read())
+            reminder_config = config.get('reminder')
+            if reminder_config:
+                self.add_reminder(reminder_config)
+                self.logger.info('loaded reminder config from %s', path)
+        # self.configs[path] = config
 
     def on_deleted(self, event):
         if event.src_path in self.configs:
             del self.configs[event.src_path]
+
+
+def main():
+    reminder_daemon = ReminderDaemon(timezone='US/Eastern', config_path='./config')
+    reminder_daemon.start()
+
+if __name__ == '__main__':
+    main()
