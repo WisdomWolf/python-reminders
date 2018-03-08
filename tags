@@ -18,6 +18,7 @@ __init__	reminder.py	/^    def __init__(self, condition, daemon=None, watcher=No
 __init__	watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
 __init__	watchers.py	/^    def __init__(self, request_kwargs, key, *args, **kwargs):$/;"	m	class:HTTPWatcher
+activate	alerters.py	/^    def activate(self):$/;"	m	class:Alerter
 activate	reminder.py	/^    def activate(self):$/;"	m	class:Reminder
 add_reminder	reminder.py	/^    def add_reminder(self, reminder_config):$/;"	m	class:ReminderDaemon
 alert	alerters.py	/^    def alert(self):$/;"	m	class:Alerter
@@ -27,6 +28,7 @@ author	setup.py	/^      author='@wisdomwolf',$/;"	v
 author_email	setup.py	/^      author_email='wisdomwolf@gmail.com',$/;"	v
 check	reminder.py	/^    def check(self):$/;"	m	class:Reminder
 config	main.py	/^            config = yaml.safe_load(f.read())$/;"	v
+deactivate	alerters.py	/^    def deactivate(self):$/;"	m	class:Alerter
 deactivate	reminder.py	/^    def deactivate(self):$/;"	m	class:Reminder
 install_requires	setup.py	/^      install_requires=[$/;"	v
 listener_callback	watchers.py	/^    def listener_callback(client, userdata, msg):$/;"	m	class:MQTTWatcher

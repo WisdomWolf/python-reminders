@@ -9,6 +9,12 @@ class Alerter(object):
     def alert(self):
         raise NotImplementedError('Alert not yet implemented')
 
+    def activate(self):
+        raise NotImplementedError('activate() not yet implemented')
+
+    def deactivate(self):
+        raise NotImplementedError('deactivate() not yet implemented')
+
 class LogAlerter(Alerter):
     
     def __init__(self, *args, **kwargs):
