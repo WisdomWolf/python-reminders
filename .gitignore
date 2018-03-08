@@ -104,4 +104,7 @@ venv.bak/
 
 # End of https://www.gitignore.io/api/python
 *.yaml
-
+*.yml
+config/**
+**.log
+**.bak
