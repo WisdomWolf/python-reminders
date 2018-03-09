@@ -13,7 +13,6 @@ Contents:
 
    reminders
    modules
-   api
 
 
 

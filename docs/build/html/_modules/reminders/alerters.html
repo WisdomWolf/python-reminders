@@ -32,7 +32,7 @@
   <h1>Source code for reminders.alerters</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 
-<div class="viewcode-block" id="Alerter"><a class="viewcode-back" href="../../api.html#reminders.alerters.Alerter">[docs]</a><span class="k">class</span> <span class="nc">Alerter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Alerter"><a class="viewcode-back" href="../../api-bak.html#reminders.alerters.Alerter">[docs]</a><span class="k">class</span> <span class="nc">Alerter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base Alert object to handle reminder notifications.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reminder</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">notifiers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repeat_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -60,7 +60,7 @@
 <div class="viewcode-block" id="Alerter.deactivate"><a class="viewcode-back" href="../../reminders.html#reminders.alerters.Alerter.deactivate">[docs]</a>    <span class="k">def</span> <span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div></div>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;deactivate() not yet implemented&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LogAlerter"><a class="viewcode-back" href="../../api.html#reminders.alerters.LogAlerter">[docs]</a><span class="k">class</span> <span class="nc">LogAlerter</span><span class="p">(</span><span class="n">Alerter</span><span class="p">):</span>
+<div class="viewcode-block" id="LogAlerter"><a class="viewcode-back" href="../../api-bak.html#reminders.alerters.LogAlerter">[docs]</a><span class="k">class</span> <span class="nc">LogAlerter</span><span class="p">(</span><span class="n">Alerter</span><span class="p">):</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
