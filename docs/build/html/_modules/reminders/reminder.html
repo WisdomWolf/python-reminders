@@ -1,0 +1,287 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>reminders.reminder &#8212; python-reminders 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for reminders.reminder</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pendulum</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">logging.config</span>
+<span class="kn">from</span> <span class="nn">dateparser</span> <span class="k">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">dateparse</span>
+<span class="kn">from</span> <span class="nn">apscheduler.schedulers.background</span> <span class="k">import</span> <span class="n">BackgroundScheduler</span><span class="p">,</span> <span class="n">BlockingScheduler</span>
+<span class="kn">from</span> <span class="nn">watchdog.observers</span> <span class="k">import</span> <span class="n">Observer</span>
+<span class="kn">from</span> <span class="nn">watchdog.events</span> <span class="k">import</span> <span class="n">PatternMatchingEventHandler</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">reminders.watchers</span> <span class="k">import</span> <span class="n">HTTPWatcher</span><span class="p">,</span> <span class="n">MQTTWatcher</span>
+<span class="kn">from</span> <span class="nn">reminders.alerters</span> <span class="k">import</span> <span class="n">LogAlerter</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<div class="viewcode-block" id="Reminder"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.Reminder">[docs]</a><span class="k">class</span> <span class="nc">Reminder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base Reminder object to handle watch and notification for a single reminder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">watcher_type_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;http&#39;</span><span class="p">:</span> <span class="n">HTTPWatcher</span><span class="p">,</span> <span class="s1">&#39;mqtt&#39;</span><span class="p">:</span> <span class="n">MQTTWatcher</span><span class="p">}</span>
+    <span class="n">alerter_type_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;log&#39;</span><span class="p">:</span> <span class="n">LogAlerter</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">watcher</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alerter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create Reminder object.</span>
+
+<span class="sd">        :param str condition:</span>
+<span class="sd">            An expression to indicate that an alert should be sent.</span>
+<span class="sd">            Should evaluate to True or False only.</span>
+<span class="sd">        :param ReminderDaemon daemon:</span>
+<span class="sd">            A ReminderDaemon instance where jobs will be scheduled.</span>
+<span class="sd">        :param Watcher watcher:</span>
+<span class="sd">            A Watcher instance to handle resource monitoring.</span>
+<span class="sd">        :param Alerter alerter:</span>
+<span class="sd">            An Alerter instance to handle sending notifications for Reminder.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_daemon</span> <span class="o">=</span> <span class="n">daemon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_daemon</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">watcher</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating watcher from: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">watcher</span><span class="p">)</span>
+            <span class="n">watcher</span><span class="p">[</span><span class="s1">&#39;reminder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">watcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">watcher_type_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">watcher</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">))(</span><span class="o">**</span><span class="n">watcher</span><span class="p">)</span>
+            <span class="n">jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">watcher</span><span class="o">.</span><span class="n">schedules</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+                <span class="n">job</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;added job to jobs: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alerter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating alerter from: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">alerter</span><span class="p">)</span>
+            <span class="n">alerter</span><span class="p">[</span><span class="s1">&#39;reminder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="c1"># self.alerter = self.alerter_type_map.get(alerter.get(&#39;type&#39;))(**alerter) or LogAlerter(**alerter)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alerter</span> <span class="o">=</span> <span class="n">LogAlerter</span><span class="p">(</span><span class="o">**</span><span class="n">alerter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span>
+
+<div class="viewcode-block" id="Reminder.test_condition"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.Reminder.test_condition">[docs]</a>    <span class="k">def</span> <span class="nf">test_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates self.expression&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;$status&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">watcher</span><span class="o">.</span><span class="n">update</span><span class="p">())</span>
+        <span class="n">prefix</span><span class="p">,</span> <span class="n">comparator</span><span class="p">,</span> <span class="n">postfix</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s([&lt;&gt;(&lt;=)(&gt;=)(==)(!=)])\s&#39;</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;pendulum.instance(dateparse(&#39;</span><span class="si">{}</span><span class="s2">&#39;))&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="k">if</span> <span class="n">dateparse</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STRICT_PARSING&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span> <span class="k">else</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">prefix</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">())</span> <span class="k">else</span> <span class="n">prefix</span>
+        <span class="n">postfix</span> <span class="o">=</span> <span class="s2">&quot;pendulum.instance(dateparse(&#39;</span><span class="si">{}</span><span class="s2">&#39;))&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">postfix</span><span class="p">)</span> <span class="k">if</span> <span class="n">dateparse</span><span class="p">(</span><span class="n">postfix</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STRICT_PARSING&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span> <span class="k">else</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">postfix</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">postfix</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">postfix</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">())</span> <span class="k">else</span> <span class="n">postfix</span>
+        <span class="n">expression</span> <span class="o">=</span> <span class="s2">&quot;results[&#39;content&#39;] = </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">comparator</span><span class="p">,</span> <span class="n">postfix</span><span class="p">)</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Reminder.check"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.Reminder.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs self.test_condition() and sends Alert if True.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_condition</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">alerter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;sending alert&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alerter</span><span class="o">.</span><span class="n">alert</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;checked successfully - no alert necessary&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Reminder.activate"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.Reminder.activate">[docs]</a>    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;TBD - May be unnecessary at this level.&quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;activate() hasn&#39;t been implemented yet&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Reminder.deactivate"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.Reminder.deactivate">[docs]</a>    <span class="k">def</span> <span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;TBD - May be unnecessary at this level.&quot;&quot;&quot;</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;deactivate() hasn&#39;t been implemented yet&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ReminderDaemon"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon">[docs]</a><span class="k">class</span> <span class="nc">ReminderDaemon</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parent Daemon to keep track of scheduled jobs and watch for config file changes.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="s1">&#39;UTC&#39;</span><span class="p">,</span> <span class="n">config_path</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create ReminderDaemon object.</span>
+
+<span class="sd">        :param boolean blocking:</span>
+<span class="sd">            Determines if Scheduler should be BlockingScheduler or BackgroundScheduler.</span>
+<span class="sd">        :param str timzone: Timezone for the scheduler to use when scheduling jobs.</span>
+<span class="sd">        :param str config_path: Path to configuration files.</span>
+<span class="sd">        :param int logger_level: Level to set logger to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logger_level</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logger_level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;initializing daemon&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span> <span class="o">=</span> <span class="n">BlockingScheduler</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span> <span class="k">if</span> <span class="n">blocking</span> <span class="k">else</span> <span class="n">BackgroundScheduler</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reminders</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timezone</span> <span class="o">=</span> <span class="n">timezone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observer</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_path</span> <span class="o">=</span> <span class="n">config_path</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_path</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">file_</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+               <span class="n">filename</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span>
+               <span class="k">if</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;.yml&#39;</span><span class="p">]:</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">load_yaml</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watchdog_handler</span> <span class="o">=</span> <span class="n">PatternMatchingEventHandler</span><span class="p">(</span><span class="s1">&#39;*.yaml;*.yml&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watchdog_handler</span><span class="o">.</span><span class="n">on_created</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watchdog_handler</span><span class="o">.</span><span class="n">on_modified</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watchdog_handler</span><span class="o">.</span><span class="n">on_deleted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_deleted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observer</span><span class="o">.</span><span class="n">schedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_watchdog_handler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReminderDaemon.start"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start the observer and scheduler associated with daemon.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ReminderDaemon.add_reminder"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.add_reminder">[docs]</a>    <span class="k">def</span> <span class="nf">add_reminder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reminder_config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new reminder and add to daemon.</span>
+
+<span class="sd">        :param dict reminder_config:</span>
+<span class="sd">            Dictionary configuration for creating Reminder.</span>
+<span class="sd">            Typically loaded from YAML file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reminder_config</span><span class="p">[</span><span class="s1">&#39;daemon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">reminder</span> <span class="o">=</span> <span class="n">Reminder</span><span class="p">(</span><span class="o">**</span><span class="n">reminder_config</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReminderDaemon.update"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reminder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update Daemon with new Reminder object.</span>
+<span class="sd">        Operates by either appending new reminder or replacing existing reminder.</span>
+
+<span class="sd">        :param Reminder reminder: Reminder to be added or updated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reminder</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reminders</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">reminder</span><span class="o">.</span><span class="n">jobs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;adding job to scheduler: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span><span class="o">**</span><span class="n">job</span><span class="p">)</span>
+                    <span class="n">reminder</span><span class="o">.</span><span class="n">job_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Unable to add job to scheduler&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reminders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_reminder</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReminderDaemon.remove_reminder"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.remove_reminder">[docs]</a>    <span class="k">def</span> <span class="nf">remove_reminder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reminder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove reminder from Daemon.</span>
+
+<span class="sd">        :param Reminder reminder: The Reminder to be removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">job_id</span> <span class="ow">in</span> <span class="n">reminder</span><span class="o">.</span><span class="n">job_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">remove_job</span><span class="p">(</span><span class="n">job_id</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reminders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReminderDaemon.on_created"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.on_created">[docs]</a>    <span class="k">def</span> <span class="nf">on_created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback for on_created events to be associated with watchdog EventHandler.</span>
+
+<span class="sd">        :param event: Event object representing the file system event.</span>
+<span class="sd">        :event type: watchdog.events.FileSystemEvent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creation event received for </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">src_path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">is_directory</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">src_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_yaml</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;skipping event because it is directory&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReminderDaemon.load_yaml"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.load_yaml">[docs]</a>    <span class="k">def</span> <span class="nf">load_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and process yaml config.</span>
+
+<span class="sd">        :param str path: The path of yaml config to load.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;loading yaml config from </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_path</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">reminder_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reminder&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;loaded reminder_config: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">reminder_config</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">reminder_config</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_reminder</span><span class="p">(</span><span class="n">reminder_config</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;loaded reminder config from </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reminders</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># self.configs[path] = config</span>
+
+<div class="viewcode-block" id="ReminderDaemon.on_deleted"><a class="viewcode-back" href="../../reminders.html#reminders.reminder.ReminderDaemon.on_deleted">[docs]</a>    <span class="k">def</span> <span class="nf">on_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback for on_deleted events to be associated with watchdog EventHandler.</span>
+
+<span class="sd">        :param event: Event object representing the file system event.</span>
+<span class="sd">        :event type: watchdog.events.FileSystemEvent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;deletion event for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">src_path</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">src_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_reminder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="n">path</span><span class="p">])</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="n">path</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;removed config for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span></div></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;No action taken for deletion event because it doesn</span><span class="se">\&#39;</span><span class="s1">t appear to exist in configs: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, WisdomWolf.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -17,6 +17,7 @@ pyyaml = "*"
 dateutils = "*"
 pendulum = "*"
 dateparser = "*"
+sphinx = "*"
 
 
 [requires]

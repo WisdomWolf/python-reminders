@@ -1,4 +1,4 @@
-from reminder import Reminder, ReminderDaemon
+from reminders.reminder import Reminder, ReminderDaemon
 import logging
 import logging.config
 import os

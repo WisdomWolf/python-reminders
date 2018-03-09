@@ -7,8 +7,8 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import yaml
-from watchers import HTTPWatcher, MQTTWatcher
-from alerters import LogAlerter
+from reminders.watchers import HTTPWatcher, MQTTWatcher
+from reminders.alerters import LogAlerter
 import os
 
 class Reminder(object):
