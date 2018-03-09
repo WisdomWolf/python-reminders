@@ -286,12 +286,14 @@ rv	docs/build/html/_static/searchtools.js	/^    var rv = $('<div class="context"
 scoreMap	docs/build/html/_static/searchtools.js	/^    var scoreMap = {};$/;"	v
 searchterms	docs/build/html/_static/searchtools.js	/^    var searchterms = [];$/;"	v
 setComparator	docs/build/html/_static/websupport.js	/^  function setComparator() {$/;"	f
+setup	docs/source/conf.py	/^def setup(app):$/;"	f
 setup_logging	reminders/main.py	/^def setup_logging($/;"	f
 show	docs/build/html/_static/websupport.js	/^  function show(id) {$/;"	f
 showError	docs/build/html/_static/websupport.js	/^  function showError(message) {$/;"	f
 showProposal	docs/build/html/_static/websupport.js	/^  function showProposal(id) {$/;"	f
 showProposeChange	docs/build/html/_static/websupport.js	/^  function showProposeChange(id) {$/;"	f
 size	docs/build/html/_static/underscore-1.3.1.js	/^    var size = 0, result = true;$/;"	v
+skip	docs/source/conf.py	/^def skip(app, what, name, obj, skip, options):$/;"	f
 slice	docs/build/html/_static/underscore-1.3.1.js	/^  var slice            = ArrayProto.slice,$/;"	v
 sortComments	docs/build/html/_static/websupport.js	/^  function sortComments(comments) {$/;"	f
 source_suffix	docs/source/conf.py	/^source_suffix = '.rst'$/;"	v
