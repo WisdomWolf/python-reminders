@@ -220,7 +220,7 @@ highlight	docs/build/html/_static/doctools.js	/^  function highlight(node, addIt
 highlightstring	docs/build/html/_static/searchtools.js	/^    var highlightstring = '?highlight=' + $.urlencode(hlterms.join(" "));$/;"	v
 hlterms	docs/build/html/_static/searchtools.js	/^    var hlterms = [];$/;"	v
 html_static_path	docs/source/conf.py	/^html_static_path = ['_static']$/;"	v
-html_theme	docs/source/conf.py	/^html_theme = 'classic'$/;"	v
+html_theme	docs/source/conf.py	/^html_theme = 'sphinx_rtd_theme'$/;"	v
 htmlhelp_basename	docs/source/conf.py	/^htmlhelp_basename = 'python-remindersdoc'$/;"	v
 i	docs/build/html/_static/searchtools.js	/^    var i, j, file;$/;"	v
 i	docs/build/html/_static/searchtools.js	/^    var i;$/;"	v
