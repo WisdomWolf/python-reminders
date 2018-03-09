@@ -23,7 +23,7 @@ pyflakes==1.6.0
 Pygments==2.2.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
--e git+git@gitlab.com:wisdomwolf/python-reminders.git@6fe1c8aaab4066b9455c56ab6e03d89a432116ba#egg=python_reminders
+-e git://github.com/WisdomWolf/python-reminders@172574491b3216c4c8f4f3ee54f18a3530bd620c#egg=python_reminders
 pytz==2018.3
 pytzdata==2018.3
 PyYAML==3.12
