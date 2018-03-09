@@ -12,11 +12,26 @@ from alerters import LogAlerter
 import os
 
 class Reminder(object):
-
+    """
+    Base Reminder object to handle watch and notification for a single reminder.
+    """
     watcher_type_map = {'http': HTTPWatcher, 'mqtt': MQTTWatcher}
     alerter_type_map = {'log': LogAlerter}
 
     def __init__(self, condition, daemon=None, watcher=None, alerter=None):
+        """
+        Create Reminder object.
+
+        :param str condition:
+            An expression to indicate that an alert should be sent.
+            Should evaluate to True or False only.
+        :param ReminderDaemon daemon:
+            A ReminderDaemon instance where jobs will be scheduled.
+        :param Watcher watcher:
+            A Watcher instance to handle resource monitoring.
+        :param Alerter alerter:
+            An Alerter instance to handle sending notifications for Reminder.
+        """
         self._logger = logging.getLogger(__name__)
         self._daemon = daemon
         self._logger.setLevel(self._daemon.logger.level)
@@ -39,6 +54,7 @@ class Reminder(object):
         self.condition = condition
 
     def test_condition(self):
+        """Evaluates self.expression"""
         results = {}
         condition = self.condition.replace('$status', self.watcher.update())
         prefix, comparator, postfix = re.split(r'\s([<>(<=)(>=)(==)(!=)])\s', condition)
@@ -49,6 +65,7 @@ class Reminder(object):
         return results['content']
 
     def check(self):
+        """Runs self.test_condition() and sends Alert if True."""
         if self.test_condition() and self.alerter:
             self._logger.debug('sending alert')
             self.alerter.alert()
@@ -56,15 +73,26 @@ class Reminder(object):
             self._logger.debug('checked successfully - no alert necessary')
 
     def activate(self):
+        """TBD - May be unnecessary at this level."""
         raise NotImplementedError("activate() hasn't been implemented yet")
 
     def deactivate(self):
+        """TBD - May be unnecessary at this level."""
         raise NotImplementedError("deactivate() hasn't been implemented yet")
 
 
 class ReminderDaemon(object):
-
+    """Parent Daemon to keep track of scheduled jobs and watch for config file changes."""
     def __init__(self, blocking=True, timezone='UTC', config_path='.', logger_level=None, *args, **kwargs):
+        """
+        Create ReminderDaemon object.
+
+        :param boolean blocking:
+            Determines if Scheduler should be BlockingScheduler or BackgroundScheduler.
+        :param str timzone: Timezone for the scheduler to use when scheduling jobs.
+        :param str config_path: Path to configuration files.
+        :param int logger_level: Level to set logger to.
+        """
         self.logger = logging.getLogger(__name__)
         if logger_level:
             self.logger.setLevel(logger_level)
@@ -87,15 +115,29 @@ class ReminderDaemon(object):
         self._observer.schedule(self._watchdog_handler, self.config_path)
 
     def start(self):
+        """Start the observer and scheduler associated with daemon."""
         self._observer.start()
         self.scheduler.start()
 
     def add_reminder(self, reminder_config):
+        """
+        Create new reminder and add to daemon.
+
+        :param dict reminder_config:
+            Dictionary configuration for creating Reminder.
+            Typically loaded from YAML file.
+        """
         reminder_config['daemon'] = self
         reminder = Reminder(**reminder_config)
         self.update(reminder)
 
     def update(self, reminder):
+        """
+        Update Daemon with new Reminder object.
+        Operates by either appending new reminder or replacing existing reminder.
+
+        :param Reminder reminder: Reminder to be added or updated.
+        """
         if reminder not in self.reminders:
             for job in reminder.jobs:
                 self.logger.debug('adding job to scheduler: %s', job)
@@ -110,11 +152,22 @@ class ReminderDaemon(object):
             self.update(reminder)
 
     def remove_reminder(self, reminder):
+        """
+        Remove reminder from Daemon.
+
+        :param Reminder reminder: The Reminder to be removed.
+        """
         for job_id in reminder.job_ids:
             self.scheduler.remove_job(job_id.id)
         self.reminders.remove(reminder)
 
     def on_created(self, event):
+        """
+        Callback for on_created events to be associated with watchdog EventHandler.
+
+        :param event: Event object representing the file system event.
+        :event type: watchdog.events.FileSystemEvent
+        """
         self.logger.debug('creation event received for {}'.format(event.src_path))
         if not event.is_directory:
             path = os.path.basename(event.src_path)
@@ -123,6 +176,11 @@ class ReminderDaemon(object):
             self.logger.debug('skipping event because it is directory')
 
     def load_yaml(self, path):
+        """
+        Read and process yaml config.
+
+        :param str path: The path of yaml config to load.
+        """
         self.logger.debug('loading yaml config from %s', path)
         path = os.path.join(self.config_path, path)
         with open(path) as f:
@@ -136,6 +194,12 @@ class ReminderDaemon(object):
         # self.configs[path] = config
 
     def on_deleted(self, event):
+        """
+        Callback for on_deleted events to be associated with watchdog EventHandler.
+
+        :param event: Event object representing the file system event.
+        :event type: watchdog.events.FileSystemEvent
+        """
         self.logger.debug('deletion event for %s', event.src_path)
         path = os.path.basename(event.src_path)
         if path in self.configs:
