@@ -35,7 +35,7 @@
 <span class="kn">import</span> <span class="nn">requests</span>
 
 
-<div class="viewcode-block" id="Watcher"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.Watcher">[docs]</a><span class="k">class</span> <span class="nc">Watcher</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Watcher"><a class="viewcode-back" href="../../api.html#reminders.watchers.Watcher">[docs]</a><span class="k">class</span> <span class="nc">Watcher</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base Watcher object for resource monitoring&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reminder</span><span class="p">,</span> <span class="n">schedules</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -51,7 +51,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reminder</span> <span class="o">=</span> <span class="n">reminder</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">schedules</span>
 
-<div class="viewcode-block" id="Watcher.update"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.Watcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Watcher.update"><a class="viewcode-back" href="../../api.html#reminders.watchers.Watcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        **REQUIRED**</span>
 <span class="sd">        Return status from monitored resource. Up to concrete class to determine implementation.</span>
@@ -59,7 +59,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;update() not yet implemented&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="HTTPWatcher"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.HTTPWatcher">[docs]</a><span class="k">class</span> <span class="nc">HTTPWatcher</span><span class="p">(</span><span class="n">Watcher</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPWatcher"><a class="viewcode-back" href="../../api.html#reminders.watchers.HTTPWatcher">[docs]</a><span class="k">class</span> <span class="nc">HTTPWatcher</span><span class="p">(</span><span class="n">Watcher</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Watcher object for monitoring HTTP(S) REST Resource.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_kwargs</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -75,7 +75,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">request_kwargs</span> <span class="o">=</span> <span class="n">request_kwargs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
 
-<div class="viewcode-block" id="HTTPWatcher.update"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.HTTPWatcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPWatcher.update"><a class="viewcode-back" href="../../api.html#reminders.watchers.HTTPWatcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return resource status for Reminder to evaluate.&quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">request_kwargs</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -86,7 +86,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
 
-<div class="viewcode-block" id="MQTTWatcher"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.MQTTWatcher">[docs]</a><span class="k">class</span> <span class="nc">MQTTWatcher</span><span class="p">(</span><span class="n">Watcher</span><span class="p">):</span>
+<div class="viewcode-block" id="MQTTWatcher"><a class="viewcode-back" href="../../api.html#reminders.watchers.MQTTWatcher">[docs]</a><span class="k">class</span> <span class="nc">MQTTWatcher</span><span class="p">(</span><span class="n">Watcher</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Watcher object for monitoring MQTT Resource.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1883</span><span class="p">,</span> <span class="n">tls</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">topic_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -111,7 +111,7 @@
         <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">topic_kwargs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">message_add_callback</span><span class="p">(</span><span class="n">topic</span><span class="p">,</span> <span class="n">listener_callback</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MQTTWatcher.listener_callback"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.MQTTWatcher.listener_callback">[docs]</a>    <span class="k">def</span> <span class="nf">listener_callback</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">userdata</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<div class="viewcode-block" id="MQTTWatcher.listener_callback"><a class="viewcode-back" href="../../api.html#reminders.watchers.MQTTWatcher.listener_callback">[docs]</a>    <span class="k">def</span> <span class="nf">listener_callback</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">userdata</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Callback to set status when msg received on monitored topic.</span>
 
@@ -125,7 +125,7 @@
         <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span></div>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;ERR&#39;</span>
 
-<div class="viewcode-block" id="MQTTWatcher.update"><a class="viewcode-back" href="../../reminders.html#reminders.watchers.MQTTWatcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MQTTWatcher.update"><a class="viewcode-back" href="../../api.html#reminders.watchers.MQTTWatcher.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return status for Reminder evaluation.&quot;&quot;&quot;</span></div></div>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span>
 </pre></div>
