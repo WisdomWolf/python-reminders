@@ -10,6 +10,7 @@ import yaml
 from reminders.watchers import HTTPWatcher, MQTTWatcher
 from reminders.alerters import LogAlerter
 import os
+from simple_eval import SimpleEval
 
 class Reminder(object):
     """
@@ -52,9 +53,26 @@ class Reminder(object):
             # self.alerter = self.alerter_type_map.get(alerter.get('type'))(**alerter) or LogAlerter(**alerter)
             self.alerter = LogAlerter(**alerter)
         self.condition = condition
+        self.simple_eval = SimpleEval()
+        self.simple_eval.names.update({
+            'status': self.watcher.status,
+            'now': self.now,
+        })
+        self.simple_eval.functions = {
+            'pendulum': pendulum,
+            'date': pendulum.instance
+        }
+
+    @property
+    def now(self):
+        """Shortcut for expression evaluation against current time"""
+        return pendulum.now()
 
     def test_condition(self):
-        """Evaluates self.expression"""
+        """
+        Evaluates self.expression
+        .. deprecated:: 0.2
+        """
         results = {}
         condition = self.condition.replace('$status', self.watcher.update())
         prefix, comparator, postfix = re.split(r'\s([<>(<=)(>=)(==)(!=)])\s', condition)
@@ -64,9 +82,22 @@ class Reminder(object):
         exec(expression)
         return results['content']
 
+    def eval(self):
+        """
+        Evaluate self.expression
+
+        :returns:   True if alert should be started
+        :rtype:     bool
+        """
+        try:
+            return self.simple_eval.eval(self.expression)
+        except TypeError:
+            self._logger.error('Error evaluating expression.', exc_info=True)
+            return None
+
     def check(self):
         """Runs self.test_condition() and sends Alert if True."""
-        if self.test_condition() and self.alerter:
+        if self.eval() and self.alerter:
             self._logger.debug('sending alert')
             self.alerter.alert()
         else:

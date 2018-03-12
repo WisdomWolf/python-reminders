@@ -18,6 +18,7 @@ dateutils = "*"
 pendulum = "*"
 dateparser = "*"
 sphinx = "*"
+simpleeval = "*"
 
 
 [requires]
