@@ -12,6 +12,14 @@ reminders.alerters module
     :undoc-members:
     :show-inheritance:
 
+reminders.main module
+---------------------
+
+.. automodule:: reminders.main
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reminders.reminder module
 -------------------------
 
@@ -28,3 +36,11 @@ reminders.watchers module
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: reminders
+    :members:
+    :undoc-members:
+    :show-inheritance:
