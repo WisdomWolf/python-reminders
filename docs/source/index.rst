@@ -1,10 +1,11 @@
 .. python-reminders documentation master file, created by
    sphinx-quickstart on Fri Mar  9 12:53:33 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to python-reminders's documentation!
-============================================
+
+Welcome to the python-reminders documentation!
+==============================================
+
+python-reminders is intended to be a versatile framework for monitoring resources and generating repeating alerts based on certain conditions.  It is very much still a work in progress at this point and should be considered pre-alpha.  This includes the state of the documentation as well as the working status of the project.
 
 Contents:
 
