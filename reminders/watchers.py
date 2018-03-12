@@ -1,6 +1,7 @@
 import logging
 from json import JSONDecodeError
 import requests
+import jmespath
 
 
 class Watcher(object):
@@ -30,24 +31,26 @@ class Watcher(object):
 class HTTPWatcher(Watcher):
     """Watcher object for monitoring HTTP(S) REST Resource."""
 
-    def __init__(self, request_kwargs, key, *args, **kwargs):
+    def __init__(self, request_kwargs, json_expression, *args, **kwargs):
         """
         Create HTTPWatcher object.
 
         :param dict request_kwargs:
             Dictionary containing keyword arguments to be passed to requests.get()
-        :param str key:
-            Key to be used to retrieve status from results JSON object.
+        :param str json_expression:
+            JMESPath expression to be used to retrieve status from results JSON object.
+        note: 
+            Assumes response is JSON.  May require separate classes for JSON/XML/Others in future.
         """
         super().__init__(*args, **kwargs)
         self.request_kwargs = request_kwargs
-        self.key = key
+        self.json_expression = json_expression
 
     def update(self):
         """Return resource status for Reminder to evaluate."""
         response = requests.get(**self.request_kwargs)
         try:
-            result = response.json().get(self.key)
+            result = jmespath.search(self.json_expression, response.json())
         except JSONDecodeError:
             self._logger.error('Unable to decode JSON from {}'.format(response))
             result = None
