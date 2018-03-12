@@ -96,7 +96,8 @@ __init__	reminders/reminder.py	/^    def __init__(self, blocking=True, timezone=
 __init__	reminders/reminder.py	/^    def __init__(self, condition, daemon=None, watcher=None, alerter=None):$/;"	m	class:Reminder
 __init__	reminders/watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
-__init__	reminders/watchers.py	/^    def __init__(self, request_kwargs, key, *args, **kwargs):$/;"	m	class:HTTPWatcher
+__init__	reminders/watchers.py	/^    def __init__(self, request_kwargs, json_expression, *args, **kwargs):$/;"	m	class:HTTPWatcher
+__version__	reminders/__init__.py	/^__version__ = '0.1'$/;"	v
 _index	docs/build/html/_static/searchtools.js	/^var Search = {$/;"	p	class:Search
 _pulse_status	docs/build/html/_static/searchtools.js	/^  _queued_query : null,$/;"	p	class:Search
 _queued_query	docs/build/html/_static/searchtools.js	/^  _index : null,$/;"	p	class:Search
@@ -316,6 +317,6 @@ update	reminders/watchers.py	/^    def update(self):$/;"	m	class:MQTTWatcher
 update	reminders/watchers.py	/^    def update(self):$/;"	m	class:Watcher
 value	reminders/main.py	/^    value = os.getenv(env_key, None)$/;"	v
 version	docs/source/conf.py	/^version = '0.1'$/;"	v
-version	setup.py	/^      version='0.1',$/;"	v
+version	setup.py	/^      version=reminders.__version__,$/;"	v
 voting	docs/build/html/_static/websupport.js	/^    downArrowPressed: '\/static\/_static\/down-pressed.png',$/;"	p	class:opts
 watcher_type_map	reminders/reminder.py	/^    watcher_type_map = {'http': HTTPWatcher, 'mqtt': MQTTWatcher}$/;"	v	class:Reminder
