@@ -72,7 +72,7 @@ class MQTTWatcher(Watcher):
                 * topic to monitor
                 * condition to start Alerter
                 * condition to cancel Alerter
-            note: May be replaced with just topic as `str` in future.
+        .. note:: May be replaced with just topic as `str` in future.
         :param str username: Username for MQTT client authentication.
         :param str password: Password for MQTT client authentication.
         """
