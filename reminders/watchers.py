@@ -67,11 +67,12 @@ class MQTTWatcher(Watcher):
         :param str hostname: url for MQTT client to connect to.
         :param int port: port to be used for MQTT connection.
         :param bool tls: Use SSL/TLS for secure connection.
-        :param dict topic_kwargs: Dictionary containing:
-              * topic to monitor
-              * condition to start Alerter
-              * condition to cancel Alerter
-        note: May be replaced with just topic as `str` in future.
+        :param dict topic_kwargs: 
+            Dictionary containing:
+                * topic to monitor
+                * condition to start Alerter
+                * condition to cancel Alerter
+            note: May be replaced with just topic as `str` in future.
         :param str username: Username for MQTT client authentication.
         :param str password: Password for MQTT client authentication.
         """
