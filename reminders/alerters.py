@@ -32,11 +32,13 @@ class Alerter(object):
 
 
 class LogAlerter(Alerter):
+    """Alerter for outputting to logger"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def alert(self):
+        """Emit alert to log"""
         self.logger.warn(self.message)
 
 
@@ -44,11 +46,20 @@ class HTTPAlerter(Alerter):
     """Alerts via POST to HTTP REST interface"""
 
     def __init__(self, request_kwargs, json_params=True, *args, **kwargs):
+        """
+        Create HTTPAlerter object
+        
+        :param dict request_kwargs:
+            Dictionary containing keyword arguments to be passed to requests.post()
+        :param bool json_params:
+            Indicates if request_kwargs['data'] should be transmitted as JSON string.
+        """
         super().__init__(*args, **kwargs)
         if json_params and request_kwargs.get('data'):
             request_kwargs['data'] = json.dumps(request_kwargs['data'])
         self.request_kwargs = request_kwargs
 
     def alert(self):
+        """Emit Alert"""
         self.logger.debug('posting HTTPAlert: {}'.format(self.request_kwargs))
         requests.post(**self.request_kwargs)

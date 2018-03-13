@@ -67,11 +67,11 @@ class MQTTWatcher(Watcher):
         :param str hostname: url for MQTT client to connect to.
         :param int port: port to be used for MQTT connection.
         :param bool tls: Use SSL/TLS for secure connection.
-        :param dict topic_kwargs:
-            Dictionary containing:
+        :param dict topic_kwargs: Dictionary containing:
               * topic to monitor
               * condition to start Alerter
               * condition to cancel Alerter
+        note: May be replaced with just topic as `str` in future.
         :param str username: Username for MQTT client authentication.
         :param str password: Password for MQTT client authentication.
         """
@@ -95,6 +95,8 @@ class MQTTWatcher(Watcher):
             self.status = msg.payload if isinstance(msg.payload, str) else msg.payload.decode('utf8')
         except UnicodeDecodeError:
             self.status = 'ERR'
+        # Trigger condition evaluation on callback
+        self.reminder.check()
 
     def update(self):
         """Return status for Reminder evaluation."""
@@ -103,9 +105,9 @@ class MQTTWatcher(Watcher):
 class NullWatcher(Watcher):
     """Empty watcher for timed reminders"""
 
-    def __init__(self, reminder=None, *args, **kwargs):
-        super().__init__(reminder=reminder, *args, **kwargs)
-        reminder.condition = 'True'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.reminder.condition = 'True' # Ghetto hack to force evaluation to always be True
 
     def update(self):
         return None
