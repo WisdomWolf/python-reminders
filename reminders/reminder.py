@@ -7,10 +7,10 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import yaml
-from reminders.watchers import HTTPWatcher, MQTTWatcher
-from reminders.alerters import LogAlerter
+from .watchers import HTTPWatcher, MQTTWatcher
+from .alerters import LogAlerter
 import os
-from simple_eval import SimpleEval
+from simpleeval import SimpleEval
 
 class Reminder(object):
     """
@@ -35,7 +35,10 @@ class Reminder(object):
         """
         self._logger = logging.getLogger(__name__)
         self._daemon = daemon
-        self._logger.setLevel(self._daemon.logger.level)
+        try:
+            self._logger.setLevel(self._daemon.logger.level)
+        except AttributeError:
+            pass
         self.jobs = []
         self.job_ids = []
         if watcher:
@@ -55,7 +58,7 @@ class Reminder(object):
         self.condition = condition
         self.simple_eval = SimpleEval()
         self.simple_eval.names.update({
-            'status': self.watcher.status,
+            'status': self.status,
             'now': self.now,
         })
         self.simple_eval.functions = {
@@ -67,6 +70,14 @@ class Reminder(object):
     def now(self):
         """Shortcut for expression evaluation against current time"""
         return pendulum.now()
+
+    @property
+    def status(self):
+        if self.watcher:
+            return self.watcher.update()
+        else:
+            self._logger.error('No watcher associated', exc_info=True)
+            return None
 
     def test_condition(self):
         """

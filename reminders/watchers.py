@@ -34,13 +34,13 @@ class HTTPWatcher(Watcher):
     def __init__(self, request_kwargs, json_expression, *args, **kwargs):
         """
         Create HTTPWatcher object.
+        note: 
+            Assumes response is JSON.  May require separate classes for JSON/XML/Others in future.
 
         :param dict request_kwargs:
             Dictionary containing keyword arguments to be passed to requests.get()
         :param str json_expression:
             JMESPath expression to be used to retrieve status from results JSON object.
-        note: 
-            Assumes response is JSON.  May require separate classes for JSON/XML/Others in future.
         """
         super().__init__(*args, **kwargs)
         self.request_kwargs = request_kwargs

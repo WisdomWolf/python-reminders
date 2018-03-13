@@ -308,6 +308,7 @@ splitQuery	docs/build/html/_static/searchtools.js	/^function splitQuery(query) {
 start	docs/build/html/_static/searchtools.js	/^    var start = 0;$/;"	v
 start	reminders/reminder.py	/^    def start(self):$/;"	m	class:ReminderDaemon
 status	EvalTester.py	/^    def status(self):$/;"	m	class:EvalTester
+status	reminders/reminder.py	/^    def status(self):$/;"	m	class:Reminder
 stemWord	docs/build/html/_static/searchtools.js	/^  this.stemWord = function (w) {$/;"	m	class:Stemmer
 stopwords	docs/build/html/_static/searchtools.js	/^    var stopwords = ["a","and","are","as","at","be","but","by","for","if","in","into","is","it","near","no","not","of","on","or","such","that","the","their","then","there","these","they","this","to","was","will","with"];$/;"	v
 templates_path	docs/source/conf.py	/^templates_path = ['_templates']$/;"	v
