@@ -23,7 +23,6 @@ BUILDDIR	docs/Makefile	/^BUILDDIR      = build$/;"	m
 COLLAPSE_INDEX	docs/build/html/_static/documentation_options.js	/^    LANGUAGE: 'None',$/;"	p	class:DOCUMENTATION_OPTIONS
 Ctor	docs/build/_static/underscore.js	/^      var self = new Ctor;$/;"	c
 Ctor	docs/build/_static/underscore.js	/^  var Ctor = function(){};$/;"	f
-EvalTester	EvalTester.py	/^class EvalTester(object):$/;"	c
 F	docs/build/html/_static/underscore.js	/^var F=function(){};b.bind=function(a,c){var d,e;if(a.bind===s&&s)return s.apply(a,i.call(arguments,1));if(!b.isFunction(a))throw new TypeError;e=i.call(arguments,2);return d=function(){if(!(this instanceof d))return a.apply(c,e.concat(i.call(arguments)));F.prototype=a.prototype;var b=new F,g=a.apply(b,e.concat(i.call(arguments)));return Object(g)===g?g:b}};b.bindAll=function(a){var c=i.call(arguments,1);c.length==0&&(c=b.functions(a));j(c,function(c){a[c]=b.bind(a[c],a)});return a};b.memoize=function(a,$/;"	f	function:b.last
 FILE_SUFFIX	docs/build/html/_static/documentation_options.js	/^    COLLAPSE_INDEX: false,$/;"	p	class:DOCUMENTATION_OPTIONS
 HAS_SOURCE	docs/build/html/_static/documentation_options.js	/^    FILE_SUFFIX: '.html',$/;"	p	class:DOCUMENTATION_OPTIONS
@@ -33,6 +32,7 @@ I18NSPHINXOPTS	docs/Makefile	/^I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOP
 LANGUAGE	docs/build/html/_static/documentation_options.js	/^    VERSION: '0.1',$/;"	p	class:DOCUMENTATION_OPTIONS
 LogAlerter	reminders/alerters.py	/^class LogAlerter(Alerter):$/;"	c
 MQTTWatcher	reminders/watchers.py	/^class MQTTWatcher(Watcher):$/;"	c
+NullWatcher	reminders/watchers.py	/^class NullWatcher(Watcher):$/;"	c
 PAPER	docs/Makefile	/^PAPER         =$/;"	m
 PAPEROPT_a4	docs/Makefile	/^PAPEROPT_a4     = -D latex_paper_size=a4$/;"	m
 PAPEROPT_letter	docs/Makefile	/^PAPEROPT_letter = -D latex_paper_size=letter$/;"	m
@@ -186,14 +186,14 @@ _.wrap	docs/build/_static/underscore.js	/^  };$/;"	f
 _.wrap	docs/build/html/_static/underscore-1.3.1.js	/^  };$/;"	f
 _.zip	docs/build/_static/underscore.js	/^  };$/;"	f
 _.zip	docs/build/html/_static/underscore-1.3.1.js	/^  };$/;"	f
-__init__	EvalTester.py	/^    def __init__(self, name, expression, status=None):$/;"	m	class:EvalTester
 __init__	reminders/alerters.py	/^    def __init__(self, *args, **kwargs):$/;"	m	class:LogAlerter
 __init__	reminders/alerters.py	/^    def __init__(self, reminder, message, notifiers=None, repeat_args=None, *args, **kwargs):$/;"	m	class:Alerter
-__init__	reminders/alerters.py	/^    def __init__(self, request_kwargs, json=True, *args, **kwargs):$/;"	m	class:HTTPAlerter
+__init__	reminders/alerters.py	/^    def __init__(self, request_kwargs, json_params=True, *args, **kwargs):$/;"	m	class:HTTPAlerter
 __init__	reminders/reminder.py	/^    def __init__(self, blocking=True, timezone='UTC', config_path='.', logger_level=None, *args, **kwargs):$/;"	m	class:ReminderDaemon
 __init__	reminders/reminder.py	/^    def __init__(self, condition, daemon=None, watcher=None, alerter=None):$/;"	m	class:Reminder
 __init__	reminders/watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
+__init__	reminders/watchers.py	/^    def __init__(self, reminder=None, *args, **kwargs):$/;"	m	class:NullWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, request_kwargs, json_expression, *args, **kwargs):$/;"	m	class:HTTPWatcher
 __version__	reminders/__init__.py	/^__version__ = '0.1'$/;"	v
 _default	docs/build/_static/jquery.js	/^	fast: 200,$/;"	p	class:jQuery.fx.speeds
@@ -307,7 +307,6 @@ bli	docs/build/html/_static/searchtools.js	/^    izer: 'ize',$/;"	p	class:Stemme
 bound	docs/build/_static/underscore.js	/^    args = slice.call(arguments, 2);$/;"	f
 breaker	docs/build/html/_static/underscore-1.3.1.js	/^  var breaker = {};$/;"	v
 buildParams	docs/build/_static/jquery.js	/^function buildParams( prefix, obj, traditional, add ) {$/;"	f
-check	EvalTester.py	/^    def check(self):$/;"	m	class:EvalTester
 check	reminders/reminder.py	/^    def check(self):$/;"	m	class:Reminder
 cloneCopyEvent	docs/build/_static/jquery.js	/^function cloneCopyEvent( src, dest ) {$/;"	f
 closeCommentImage	docs/build/_static/websupport.js	/^    commentImage: '\/static\/_static\/comment.png',$/;"	p	class:opts
@@ -548,7 +547,6 @@ noMatch	docs/build/_static/underscore.js	/^  var noMatch = \/(.)^\/;$/;"	v
 nodeHook	docs/build/_static/jquery.js	/^var nodeHook, boolHook,$/;"	v
 nodeNames	docs/build/_static/jquery.js	/^var nodeNames = "abbr|article|aside|audio|bdi|canvas|data|datalist|details|figcaption|figure|footer|" +$/;"	v
 nonce	docs/build/_static/jquery.js	/^var nonce = jQuery.now();$/;"	v
-now	EvalTester.py	/^    def now(self):$/;"	m	class:EvalTester
 now	reminders/reminder.py	/^    def now(self):$/;"	m	class:Reminder
 objNameMatch	docs/build/_static/searchtools.js	/^var Scorer = {$/;"	p	class:Scorer
 objNameMatch	docs/build/html/_static/searchtools.js	/^var Scorer = {$/;"	p	class:Scorer
@@ -664,7 +662,6 @@ splitQuery	docs/build/html/_static/searchtools.js	/^function splitQuery(query) {
 start	docs/build/_static/searchtools.js	/^    var start = 0;$/;"	v
 start	docs/build/html/_static/searchtools.js	/^    var start = 0;$/;"	v
 start	reminders/reminder.py	/^    def start(self):$/;"	m	class:ReminderDaemon
-status	EvalTester.py	/^    def status(self):$/;"	m	class:EvalTester
 status	reminders/reminder.py	/^    def status(self):$/;"	m	class:Reminder
 stemWord	docs/build/_static/searchtools.js	/^  this.stemWord = function (w) {$/;"	m	class:Stemmer
 stemWord	docs/build/html/_static/searchtools.js	/^  this.stemWord = function (w) {$/;"	m	class:Stemmer
@@ -696,6 +693,7 @@ upArrowPressed	docs/build/html/_static/websupport.js	/^    downArrow: '\/static\
 update	reminders/reminder.py	/^    def update(self, reminder):$/;"	m	class:ReminderDaemon
 update	reminders/watchers.py	/^    def update(self):$/;"	m	class:HTTPWatcher
 update	reminders/watchers.py	/^    def update(self):$/;"	m	class:MQTTWatcher
+update	reminders/watchers.py	/^    def update(self):$/;"	m	class:NullWatcher
 update	reminders/watchers.py	/^    def update(self):$/;"	m	class:Watcher
 value	docs/build/_static/underscore.js	/^  _.prototype.value = function() {$/;"	m	class:_
 value	reminders/main.py	/^    value = os.getenv(env_key, None)$/;"	v

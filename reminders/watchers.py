@@ -99,3 +99,13 @@ class MQTTWatcher(Watcher):
     def update(self):
         """Return status for Reminder evaluation."""
         return self.status
+
+class NullWatcher(Watcher):
+    """Empty watcher for timed reminders"""
+
+    def __init__(self, reminder=None, *args, **kwargs):
+        super().__init__(reminder=reminder, *args, **kwargs)
+        reminder.condition = 'True'
+
+    def update(self):
+        return None

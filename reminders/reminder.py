@@ -42,6 +42,7 @@ class Reminder(object):
             pass
         self.jobs = []
         self.job_ids = []
+        self.condition = condition
         if watcher:
             self._logger.debug('creating watcher from: %s', watcher)
             watcher['reminder'] = self
@@ -57,7 +58,6 @@ class Reminder(object):
             alerter['reminder'] = self
             AlerterClass = getattr(importlib.import_module('reminders.alerters'), alerter.get('type'))
             self.alerter = AlerterClass(**alerter)
-        self.condition = condition
         self.simple_eval = SimpleEval()
         self.simple_eval.names.update({
             'status': self.status,
@@ -76,11 +76,14 @@ class Reminder(object):
     @property
     def status(self):
         if self.watcher:
-            d = dateparse(self.watcher.update(), settings={'STRICT_PARSING': True})
-            if d:
-                return d
-            else:
-                return self.watcher.update()
+            try:
+                d = dateparse(self.watcher.update(), settings={'STRICT_PARSING': True})
+                if d:
+                    return d
+                else:
+                    return self.watcher.update()
+            except TypeError:
+                return None
         else:
             self._logger.error('No watcher associated', exc_info=True)
             return None

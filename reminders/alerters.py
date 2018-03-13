@@ -43,12 +43,11 @@ class LogAlerter(Alerter):
 class HTTPAlerter(Alerter):
     """Alerts via POST to HTTP REST interface"""
 
-    def __init__(self, request_kwargs, json=True, *args, **kwargs):
+    def __init__(self, request_kwargs, json_params=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if json and request_kwargs['data']:
-            self.request_kwargs['data'] = json.dumps(request_kwargs['data'])
-        else:
-            self.request_kwargs = request_kwargs
+        if json_params and request_kwargs.get('data'):
+            request_kwargs['data'] = json.dumps(request_kwargs['data'])
+        self.request_kwargs = request_kwargs
 
     def alert(self):
         self.logger.debug('posting HTTPAlert: {}'.format(self.request_kwargs))
