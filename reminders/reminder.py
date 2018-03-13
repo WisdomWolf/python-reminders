@@ -91,7 +91,7 @@ class Reminder(object):
     def test_condition(self):
         """
         .. deprecated:: 0.1
-            Evaluates self.expression
+           Use :func:`eval` instead.
         """
         results = {}
         condition = self.condition.replace('$status', self.watcher.update())
