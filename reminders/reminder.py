@@ -91,7 +91,7 @@ class Reminder(object):
     def test_condition(self):
         """
         Evaluates self.expression
-        .. deprecated:: 0.2
+        deprecated: 0.2
         """
         results = {}
         condition = self.condition.replace('$status', self.watcher.update())
