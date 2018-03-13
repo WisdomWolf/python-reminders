@@ -1,4 +1,6 @@
 import logging
+import requests
+import json
 
 class Alerter(object):
     """Base Alert object to handle reminder notifications."""
@@ -18,7 +20,7 @@ class Alerter(object):
         """
         self.logger = logging.getLogger(__name__)
         self.message = message
-        
+
     def alert(self):
         raise NotImplementedError('Alert not yet implemented')
 
@@ -28,10 +30,26 @@ class Alerter(object):
     def deactivate(self):
         raise NotImplementedError('deactivate() not yet implemented')
 
+
 class LogAlerter(Alerter):
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
     def alert(self):
         self.logger.warn(self.message)
+
+
+class HTTPAlerter(Alerter):
+    """Alerts via POST to HTTP REST interface"""
+
+    def __init__(self, request_kwargs, json=True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if json and request_kwargs['data']:
+            self.request_kwargs['data'] = json.dumps(request_kwargs['data'])
+        else:
+            self.request_kwargs = request_kwargs
+
+    def alert(self):
+        self.logger.debug('posting HTTPAlert: {}'.format(self.request_kwargs))
+        requests.post(**self.request_kwargs)

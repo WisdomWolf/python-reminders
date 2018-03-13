@@ -11,6 +11,7 @@ from .watchers import HTTPWatcher, MQTTWatcher
 from .alerters import LogAlerter
 import os
 from simpleeval import SimpleEval
+import importlib
 
 class Reminder(object):
     """
@@ -44,7 +45,8 @@ class Reminder(object):
         if watcher:
             self._logger.debug('creating watcher from: %s', watcher)
             watcher['reminder'] = self
-            self.watcher = self.watcher_type_map.get(watcher.get('type'))(**watcher)
+            WatcherClass = getattr(importlib.import_module('reminders.watchers'), watcher.get('type'))
+            self.watcher = WatcherClass(**watcher)
             jobs = self.watcher.schedules
             for job in jobs:
                 job['func'] = self.check
@@ -53,8 +55,8 @@ class Reminder(object):
         if alerter:
             self._logger.debug('creating alerter from: %s', alerter)
             alerter['reminder'] = self
-            # self.alerter = self.alerter_type_map.get(alerter.get('type'))(**alerter) or LogAlerter(**alerter)
-            self.alerter = LogAlerter(**alerter)
+            AlerterClass = getattr(importlib.import_module('reminders.alerters'), alerter.get('type'))
+            self.alerter = AlerterClass(**alerter)
         self.condition = condition
         self.simple_eval = SimpleEval()
         self.simple_eval.names.update({
@@ -74,7 +76,11 @@ class Reminder(object):
     @property
     def status(self):
         if self.watcher:
-            return self.watcher.update()
+            d = dateparse(self.watcher.update(), settings={'STRICT_PARSING': True})
+            if d:
+                return d
+            else:
+                return self.watcher.update()
         else:
             self._logger.error('No watcher associated', exc_info=True)
             return None
@@ -101,7 +107,7 @@ class Reminder(object):
         :rtype:     bool
         """
         try:
-            return self.simple_eval.eval(self.expression)
+            return self.simple_eval.eval(self.condition)
         except TypeError:
             self._logger.error('Error evaluating expression.', exc_info=True)
             return None
