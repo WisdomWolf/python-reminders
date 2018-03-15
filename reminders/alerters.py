@@ -25,22 +25,33 @@ class Alerter(object):
         self.logger = logging.getLogger(__name__)
         self.message = message
         self.repeat_interval = repeat_interval
-        self.max_repeat = 0
+        self.repeat_interval['trigger'] = 'interval'
+        self.repeate_interval['func'] = self.alert
+        self.max_repeat = max_repeat
         self.current_repeats = 0
         self.alert_on_activate = alert_on_activate
+        self.jobs = []
         self.active = False
 
     def alert(self):
-        raise NotImplementedError('Alert not yet implemented')
+        self.current_repeats += 1
 
     def activate(self):
         self.active = True
         if self.alert_on_activate:
             self.alert()
+        # TODO Make job scheduling better handled without jumping through multiple classes
+        job = self.reminder.daemon.scheduler.add_job(**self.repeat_interval)
+        self.jobs.append(job)
+        self.reminder.job_ids.append(job.id)
 
     def deactivate(self):
         self.active = False
         self.current_repeats = 0
+        # TODO Handle job addition/removal better
+        for job in self.jobs:
+            self.reminder.daemon.scheduler.remove_job(job.id)
+            self.reminder.job_ids.remove(job.id)
 
 
 class LogAlerter(Alerter):

@@ -193,8 +193,8 @@ class ReminderDaemon(object):
             for job in reminder.jobs:
                 self.logger.debug('adding job to scheduler: %s', job)
                 try:
-                    job_id = self.scheduler.add_job(**job)
-                    reminder.job_ids.append(job_id)
+                    job_def = self.scheduler.add_job(**job)
+                    reminder.job_ids.append(job_def.id)
                 except TypeError:
                     logger.error('Unable to add job to scheduler', exc_info=True)
             self.reminders.append(reminder)
@@ -209,7 +209,7 @@ class ReminderDaemon(object):
         :param Reminder reminder: The Reminder to be removed.
         """
         for job_id in reminder.job_ids:
-            self.scheduler.remove_job(job_id.id)
+            self.scheduler.remove_job(job_id)
         self.reminders.remove(reminder)
 
     def on_created(self, event):
