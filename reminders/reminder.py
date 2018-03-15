@@ -118,7 +118,7 @@ class Reminder(object):
     def check(self):
         """Runs self.test_condition() and sends Alert if True."""
         if self.eval() and self.alerter:
-            self._logger.debug('sending alert')
+            self._logger.debug('activating alert')
             self.alerter.activate()
         else:
             self._logger.debug('checked successfully - no alert necessary')

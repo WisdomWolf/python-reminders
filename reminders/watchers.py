@@ -19,6 +19,8 @@ class Watcher(object):
         self._logger = logging.getLogger(__name__)
         self.reminder = reminder
         self.schedules = schedules
+        self._logger.setLevel(reminder._logger.level)
+        self._logger.debug('new watcher created: {}'.format(self.__dict__))
 
     def update(self):
         """

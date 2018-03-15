@@ -26,13 +26,14 @@ class Alerter(object):
         self.reminder = reminder
         self.message = message
         self.repeat_interval = repeat_interval
-        self.repeat_interval['trigger'] = 'interval'
-        self.repeat_interval['func'] = self.alert
+        self.repeat_interval.update({'trigger': 'interval', 'func': self.alert})
         self.max_repeat = max_repeat
         self.current_repeats = 0
         self.alert_on_activate = alert_on_activate
         self.jobs = []
         self.active = False
+        self.logger.setLevel(self.reminder._logger.level)
+        self.logger.debug('New Alerter created: {}'.format(self.__dict__))
 
     def alert(self):
         """Send alert"""
