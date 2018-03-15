@@ -119,7 +119,7 @@ class Reminder(object):
         """Runs self.test_condition() and sends Alert if True."""
         if self.eval() and self.alerter:
             self._logger.debug('sending alert')
-            self.alerter.alert()
+            self.alerter.activate()
         else:
             self._logger.debug('checked successfully - no alert necessary')
 
@@ -154,11 +154,6 @@ class ReminderDaemon(object):
         self.timezone = timezone
         self._observer = Observer()
         self.config_path = config_path
-        for _, _, files in os.walk(self.config_path):
-            for file_ in files:
-               filename, extension = os.path.splitext(file_)
-               if extension in ['.yaml', '.yml']:
-                   self.load_yaml(file_)
         self._watchdog_handler = PatternMatchingEventHandler('*.yaml;*.yml')
         self._watchdog_handler.on_created = self.on_created
         self._watchdog_handler.on_modified = self.on_created

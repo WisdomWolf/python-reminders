@@ -1,4 +1,4 @@
-from reminders.reminder import Reminder, ReminderDaemon
+from .reminders import Reminder, ReminderDaemon
 import logging
 import logging.config
 import os
@@ -35,6 +35,11 @@ def main():
     reminder_daemon = ReminderDaemon(timezone='US/Eastern', config_path='./config/reminders', logger_level=logger_level)
     if args.debug:
         reminder_daemon.logger.setLevel(logging.DEBUG)
+    for _, _, files in os.walk(reminder_daemon.config_path):
+        for file_ in files:
+           filename, extension = os.path.splitext(file_)
+           if extension in ['.yaml', '.yml']:
+               reminder_daemon.load_yaml(file_)
     reminder_daemon.start()
 
 if __name__ == '__main__':

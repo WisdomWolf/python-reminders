@@ -23,10 +23,11 @@ class Alerter(object):
             waiting for first scheduled job to trigger.
         """
         self.logger = logging.getLogger(__name__)
+        self.reminder = reminder
         self.message = message
         self.repeat_interval = repeat_interval
         self.repeat_interval['trigger'] = 'interval'
-        self.repeate_interval['func'] = self.alert
+        self.repeat_interval['func'] = self.alert
         self.max_repeat = max_repeat
         self.current_repeats = 0
         self.alert_on_activate = alert_on_activate
@@ -34,24 +35,36 @@ class Alerter(object):
         self.active = False
 
     def alert(self):
-        self.current_repeats += 1
+        """Send alert"""
+        self.logger.debug('emitting alert')
+        if self.current_repeats < self.max_repeat:
+            self.current_repeats += 1
+        else:
+            self.logger.debug('deactivating alerts due to max_repeat')
+            self.deactivate()
 
     def activate(self):
+        """Activate alerts"""
         self.active = True
+        self.logger.debug('alert activated')
         if self.alert_on_activate:
             self.alert()
         # TODO Make job scheduling better handled without jumping through multiple classes
-        job = self.reminder.daemon.scheduler.add_job(**self.repeat_interval)
+        job = self.reminder._daemon.scheduler.add_job(**self.repeat_interval)
+        self.logger.debug('alert job added to scheduler')
         self.jobs.append(job)
         self.reminder.job_ids.append(job.id)
 
     def deactivate(self):
+        """Deactivate all existing alerts."""
         self.active = False
+        self.logger.debug('alert deactivated')
         self.current_repeats = 0
         # TODO Handle job addition/removal better
         for job in self.jobs:
-            self.reminder.daemon.scheduler.remove_job(job.id)
+            self.reminder._daemon.scheduler.remove_job(job.id)
             self.reminder.job_ids.remove(job.id)
+        self.logger.debug('all alert jobs removed from scheduler')
 
 
 class LogAlerter(Alerter):
@@ -62,7 +75,9 @@ class LogAlerter(Alerter):
 
     def alert(self):
         """Emit alert to log"""
-        self.logger.warn(self.message)
+        super().alert()
+        if self.active:
+            self.logger.warn(self.message)
 
 
 class HTTPAlerter(Alerter):
@@ -84,5 +99,7 @@ class HTTPAlerter(Alerter):
 
     def alert(self):
         """Emit Alert"""
-        self.logger.debug('posting HTTPAlert: {}'.format(self.request_kwargs))
-        requests.post(**self.request_kwargs)
+        super().alert()
+        if self.active:
+            self.logger.debug('posting HTTPAlert: {}'.format(self.request_kwargs))
+            requests.post(**self.request_kwargs)
