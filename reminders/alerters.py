@@ -5,7 +5,8 @@ import json
 class Alerter(object):
     """Base Alert object to handle reminder notifications."""
 
-    def __init__(self, reminder, message, notifiers=None, repeat_args=None, *args, **kwargs):
+    def __init__(self, reminder, message, notifiers=None, repeat_interval={}, max_repeat=0,
+                 alert_on_activate=True, *args, **kwargs):
         """
         Create Alerter object.
 
@@ -15,20 +16,31 @@ class Alerter(object):
             note: This was added as part of POC. Likely to be removed in future.
         :param notifiers: ¯\_(ツ)_/¯
         :param dict repeat_args:
-            Arguments to set repeat interval and max number of repeats.
-            note: Might make more sense to seperate out into individual arguments.
+            Arguments to set repeat interval
+        :param int max_repeat: number of times alert should repeat.
+        :param bool alert_on_activate:
+            When ``True`` alert will be emitted as soon as activated rather than
+            waiting for first scheduled job to trigger.
         """
         self.logger = logging.getLogger(__name__)
         self.message = message
+        self.repeat_interval = repeat_interval
+        self.max_repeat = 0
+        self.current_repeats = 0
+        self.alert_on_activate = alert_on_activate
+        self.active = False
 
     def alert(self):
         raise NotImplementedError('Alert not yet implemented')
 
     def activate(self):
-        raise NotImplementedError('activate() not yet implemented')
+        self.active = True
+        if self.alert_on_activate:
+            self.alert()
 
     def deactivate(self):
-        raise NotImplementedError('deactivate() not yet implemented')
+        self.active = False
+        self.current_repeats = 0
 
 
 class LogAlerter(Alerter):

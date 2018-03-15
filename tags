@@ -187,13 +187,13 @@ _.wrap	docs/build/html/_static/underscore-1.3.1.js	/^  };$/;"	f
 _.zip	docs/build/_static/underscore.js	/^  };$/;"	f
 _.zip	docs/build/html/_static/underscore-1.3.1.js	/^  };$/;"	f
 __init__	reminders/alerters.py	/^    def __init__(self, *args, **kwargs):$/;"	m	class:LogAlerter
-__init__	reminders/alerters.py	/^    def __init__(self, reminder, message, notifiers=None, repeat_args=None, *args, **kwargs):$/;"	m	class:Alerter
+__init__	reminders/alerters.py	/^    def __init__(self, reminder, message, notifiers=None, repeat_interval={}, max_repeat=0,$/;"	m	class:Alerter
 __init__	reminders/alerters.py	/^    def __init__(self, request_kwargs, json_params=True, *args, **kwargs):$/;"	m	class:HTTPAlerter
 __init__	reminders/reminder.py	/^    def __init__(self, blocking=True, timezone='UTC', config_path='.', logger_level=None, *args, **kwargs):$/;"	m	class:ReminderDaemon
 __init__	reminders/reminder.py	/^    def __init__(self, condition, daemon=None, watcher=None, alerter=None):$/;"	m	class:Reminder
+__init__	reminders/watchers.py	/^    def __init__(self, *args, **kwargs):$/;"	m	class:NullWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, hostname, port=1883, tls=False, topic_kwargs=None, username=None, password=None, *args, **kwargs):$/;"	m	class:MQTTWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, reminder, schedules, *args, **kwargs):$/;"	m	class:Watcher
-__init__	reminders/watchers.py	/^    def __init__(self, reminder=None, *args, **kwargs):$/;"	m	class:NullWatcher
 __init__	reminders/watchers.py	/^    def __init__(self, request_kwargs, json_expression, *args, **kwargs):$/;"	m	class:HTTPWatcher
 __version__	reminders/__init__.py	/^__version__ = '0.1'$/;"	v
 _default	docs/build/_static/jquery.js	/^	fast: 200,$/;"	p	class:jQuery.fx.speeds
