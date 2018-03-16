@@ -90,6 +90,7 @@ class Reminder(object):
 
     def test_condition(self):
         """
+        .. todo:: Remove :func:`test_condition` from :class:`Reminder`
         .. deprecated:: 0.1
            Use :func:`eval` instead.
         """

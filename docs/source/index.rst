@@ -14,6 +14,7 @@ Contents:
    reminders
    modules
 
+.. todolist::
 
 
 Indices and tables
