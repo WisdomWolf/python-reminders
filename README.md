@@ -2,7 +2,8 @@
 
 ## Description
 Python framework for monitoring resources and generating recurring alerts based on conditions.  Designed to utilized YAML for configuration and includes the ability to dynamically add/remove reminders when configs are added/modified/deleted from the configured directory.
-**This is still very much a Work In Progress.  Features may change at any time**
+
+**This is still very much a Work In Progress.  Features may change at any time.**
 
 ## Documentation
 python-reminder's full documentation is online at [python-reminder Documentation](https://python-reminders.readthedocs.io)
