@@ -1,6 +1,7 @@
 import logging
 from json import JSONDecodeError
 import requests
+import jmespath
 
 
 class Watcher(object):
@@ -18,6 +19,8 @@ class Watcher(object):
         self._logger = logging.getLogger(__name__)
         self.reminder = reminder
         self.schedules = schedules
+        self._logger.setLevel(reminder._logger.level)
+        self._logger.debug('new watcher created: {}'.format(self.__dict__))
 
     def update(self):
         """
@@ -30,24 +33,26 @@ class Watcher(object):
 class HTTPWatcher(Watcher):
     """Watcher object for monitoring HTTP(S) REST Resource."""
 
-    def __init__(self, request_kwargs, key, *args, **kwargs):
+    def __init__(self, request_kwargs, json_expression, *args, **kwargs):
         """
         Create HTTPWatcher object.
+        note: 
+            Assumes response is JSON.  May require separate classes for JSON/XML/Others in future.
 
         :param dict request_kwargs:
             Dictionary containing keyword arguments to be passed to requests.get()
-        :param str key:
-            Key to be used to retrieve status from results JSON object.
+        :param str json_expression:
+            JMESPath expression to be used to retrieve status from results JSON object.
         """
         super().__init__(*args, **kwargs)
         self.request_kwargs = request_kwargs
-        self.key = key
+        self.json_expression = json_expression
 
     def update(self):
         """Return resource status for Reminder to evaluate."""
         response = requests.get(**self.request_kwargs)
         try:
-            result = response.json().get(self.key)
+            result = jmespath.search(self.json_expression, response.json())
         except JSONDecodeError:
             self._logger.error('Unable to decode JSON from {}'.format(response))
             result = None
@@ -64,11 +69,12 @@ class MQTTWatcher(Watcher):
         :param str hostname: url for MQTT client to connect to.
         :param int port: port to be used for MQTT connection.
         :param bool tls: Use SSL/TLS for secure connection.
-        :param dict topic_kwargs:
+        :param dict topic_kwargs: 
             Dictionary containing:
-              * topic to monitor
-              * condition to start Alerter
-              * condition to cancel Alerter
+                * topic to monitor
+                * condition to start Alerter
+                * condition to cancel Alerter
+        .. note:: May be replaced with just topic as `str` in future.
         :param str username: Username for MQTT client authentication.
         :param str password: Password for MQTT client authentication.
         """
@@ -92,7 +98,19 @@ class MQTTWatcher(Watcher):
             self.status = msg.payload if isinstance(msg.payload, str) else msg.payload.decode('utf8')
         except UnicodeDecodeError:
             self.status = 'ERR'
+        # Trigger condition evaluation on callback
+        self.reminder.check()
 
     def update(self):
         """Return status for Reminder evaluation."""
         return self.status
+
+class NullWatcher(Watcher):
+    """Empty watcher for timed reminders"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.reminder.condition = 'True' # Ghetto hack to force evaluation to always be True
+
+    def update(self):
+        return None

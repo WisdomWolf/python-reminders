@@ -1,7 +1,8 @@
 from setuptools import setup
+import reminders
 
 setup(name='python-reminders',
-      version='0.1',
+      version=reminders.__version__,
       py_modules=['reminders'],
       author='@wisdomwolf',
       author_email='wisdomwolf@gmail.com',

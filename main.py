@@ -1,4 +1,4 @@
-from .reminders import Reminder, ReminderDaemon
+from reminders.reminder import Reminder, ReminderDaemon
 import logging
 import logging.config
 import os
@@ -32,7 +32,7 @@ def main():
                         action='store_true')
     args = parser.parse_args()
     logger_level = logging.DEBUG if args.debug else logging.INFO
-    reminder_daemon = ReminderDaemon(timezone='US/Eastern', config_path='./config/reminders', logger_level=logger_level)
+    reminder_daemon = ReminderDaemon(timezone='US/Eastern', config_path='./reminders/config/reminders', logger_level=logger_level)
     if args.debug:
         reminder_daemon.logger.setLevel(logging.DEBUG)
     for _, _, files in os.walk(reminder_daemon.config_path):

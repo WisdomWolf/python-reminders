@@ -7,9 +7,11 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import yaml
-from reminders.watchers import HTTPWatcher, MQTTWatcher
-from reminders.alerters import LogAlerter
+from .watchers import HTTPWatcher, MQTTWatcher
+from .alerters import LogAlerter
 import os
+from simpleeval import SimpleEval
+import importlib
 
 class Reminder(object):
     """
@@ -34,13 +36,18 @@ class Reminder(object):
         """
         self._logger = logging.getLogger(__name__)
         self._daemon = daemon
-        self._logger.setLevel(self._daemon.logger.level)
+        try:
+            self._logger.setLevel(self._daemon.logger.level)
+        except AttributeError:
+            pass
         self.jobs = []
         self.job_ids = []
+        self.condition = condition
         if watcher:
             self._logger.debug('creating watcher from: %s', watcher)
             watcher['reminder'] = self
-            self.watcher = self.watcher_type_map.get(watcher.get('type'))(**watcher)
+            WatcherClass = getattr(importlib.import_module('reminders.watchers'), watcher.get('type'))
+            self.watcher = WatcherClass(**watcher)
             jobs = self.watcher.schedules
             for job in jobs:
                 job['func'] = self.check
@@ -49,12 +56,43 @@ class Reminder(object):
         if alerter:
             self._logger.debug('creating alerter from: %s', alerter)
             alerter['reminder'] = self
-            # self.alerter = self.alerter_type_map.get(alerter.get('type'))(**alerter) or LogAlerter(**alerter)
-            self.alerter = LogAlerter(**alerter)
-        self.condition = condition
+            AlerterClass = getattr(importlib.import_module('reminders.alerters'), alerter.get('type'))
+            self.alerter = AlerterClass(**alerter)
+        self.simple_eval = SimpleEval()
+        self.simple_eval.names.update({
+            'status': self.status,
+            'now': self.now,
+        })
+        self.simple_eval.functions = {
+            'pendulum': pendulum,
+            'date': pendulum.instance
+        }
+
+    @property
+    def now(self):
+        """Shortcut for expression evaluation against current time"""
+        return pendulum.now()
+
+    @property
+    def status(self):
+        if self.watcher:
+            try:
+                d = dateparse(self.watcher.update(), settings={'STRICT_PARSING': True})
+                if d:
+                    return d
+                else:
+                    return self.watcher.update()
+            except TypeError:
+                return None
+        else:
+            self._logger.error('No watcher associated', exc_info=True)
+            return None
 
     def test_condition(self):
-        """Evaluates self.expression"""
+        """
+        .. deprecated:: 0.1
+           Use :func:`eval` instead.
+        """
         results = {}
         condition = self.condition.replace('$status', self.watcher.update())
         prefix, comparator, postfix = re.split(r'\s([<>(<=)(>=)(==)(!=)])\s', condition)
@@ -64,11 +102,24 @@ class Reminder(object):
         exec(expression)
         return results['content']
 
+    def eval(self):
+        """
+        Evaluate self.expression
+
+        :returns:   True if alert should be started
+        :rtype:     bool
+        """
+        try:
+            return self.simple_eval.eval(self.condition)
+        except TypeError:
+            self._logger.error('Error evaluating expression.', exc_info=True)
+            return None
+
     def check(self):
         """Runs self.test_condition() and sends Alert if True."""
-        if self.test_condition() and self.alerter:
-            self._logger.debug('sending alert')
-            self.alerter.alert()
+        if self.eval() and self.alerter:
+            self._logger.debug('activating alert')
+            self.alerter.activate()
         else:
             self._logger.debug('checked successfully - no alert necessary')
 
@@ -103,11 +154,6 @@ class ReminderDaemon(object):
         self.timezone = timezone
         self._observer = Observer()
         self.config_path = config_path
-        for _, _, files in os.walk(self.config_path):
-            for file_ in files:
-               filename, extension = os.path.splitext(file_)
-               if extension in ['.yaml', '.yml']:
-                   self.load_yaml(file_)
         self._watchdog_handler = PatternMatchingEventHandler('*.yaml;*.yml')
         self._watchdog_handler.on_created = self.on_created
         self._watchdog_handler.on_modified = self.on_created
@@ -142,8 +188,8 @@ class ReminderDaemon(object):
             for job in reminder.jobs:
                 self.logger.debug('adding job to scheduler: %s', job)
                 try:
-                    job_id = self.scheduler.add_job(**job)
-                    reminder.job_ids.append(job_id)
+                    job_def = self.scheduler.add_job(**job)
+                    reminder.job_ids.append(job_def.id)
                 except TypeError:
                     logger.error('Unable to add job to scheduler', exc_info=True)
             self.reminders.append(reminder)
@@ -158,7 +204,7 @@ class ReminderDaemon(object):
         :param Reminder reminder: The Reminder to be removed.
         """
         for job_id in reminder.job_ids:
-            self.scheduler.remove_job(job_id.id)
+            self.scheduler.remove_job(job_id)
         self.reminders.remove(reminder)
 
     def on_created(self, event):
